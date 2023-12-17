@@ -35,18 +35,9 @@
     let consumptionData, generationData, labels;
 
 if (range === 'day') {
-    // Get the last data point's date
-let lastDataPointDate = new Date(data.consumptionData[data.consumptionData.length - 1].date);
-
-// Subtract 2 hours from the last data point's date
-lastDataPointDate.setHours(lastDataPointDate.getHours() - 2);
-
-// Filter the data to include only the data points within the range
-consumptionData = data.consumptionData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => item.value);
-generationData = data.generationData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => item.value);
-labels = data.consumptionData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => new Date(item.date).toLocaleDateString());
-
-} else if (range === 'month') {
+    consumptionData = data.consumptionData.map(item => item.value);
+    generationData = data.generationData.map(item => item.value);
+    labels = data.consumptionData.map(item => new Date(item.date).toLocaleTimeString());} else if (range === 'month') {
     consumptionData = data.consumptionData.filter((item, index) => index % 3 === 0).map(item => item.value);
     generationData = data.generationData.filter((item, index) => index % 3 === 0).map(item => item.value);
     labels = data.consumptionData.filter((item, index) => index % 3 === 0).map(item => new Date(item.date).toLocaleDateString());
