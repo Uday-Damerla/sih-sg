@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>SGaaS Monitoring System</title>
-	<link rel="stylesheet" type="text/css" href="dstyle.css">
+    <title>SGaaS Monitoring System</title>
+    <link rel="stylesheet" type="text/css" href="dstyle.css">
 </head>
 <body>
-	<header>
-		<h1>Smart Grid Monitoring System</h1>
-	</header>
-	<nav>
+    <header>
+        <h1>Smart Grid Monitoring System</h1>
+    </header>
+    <nav>
         <button class="tablinks" onclick="openTab(event, 'Daily View')">Daily View</button>
         <button class="tablinks" onclick="openTab(event, 'Monthly View')">Monthly View</button>
         <button class="tablinks" onclick="openTab(event, 'Yearly View')">Yearly View</button>
         <span id="userId" style="float: right;">Admin ID: <%=username%></span>
         <a href="/logout">Logout</a>
     </nav>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     var myChart; // Declare myChart globally so it can be accessed in openTab function
 
@@ -87,34 +88,8 @@ window.onload = function() {
         </div>
     </section>
 </main>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-
-var ctx = document.getElementById('myChart').getContext('2d');
-var myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        datasets: [{
-            label: 'Power consumption [kW]',
-            labels = Array.from({length: 24}, (_, i) => i + 'h');
-            data: [12, 19, 3, 5, 2, 3],
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
-</script>
-	<footer>
-		<p>© 2023 SGaas</p>
-	</footer>
+    <footer>
+        <p>© 2023 SGaas</p>
+    </footer>
 </body>
 </html>
