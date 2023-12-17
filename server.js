@@ -106,7 +106,12 @@ app.get('/udash', (req, res) => {
     res.render('udash', { userId: req.session.userId });
 });
 app.get('/adash', (req, res) => {
-    res.render('adash', { userId: req.session.userId });
+    try {
+        res.render('adash', { userId: req.session.userId });
+    } catch (err) {
+        console.error('Error rendering adash:', err);
+        res.status(500).send('Internal server error');
+    }
 });
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
