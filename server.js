@@ -1,6 +1,12 @@
 const express = require('express');
-const session = require('express-session');
-const MongoClient = require('mongodb').MongoClient;
+const bodyParser = require('body-parser');
+const User = require('./models/user');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const { createServer } = require('http');
+const cors = require('cors');
+app.set('view engine', 'ejs');
+
+
 const uri = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/test?retryWrites=true&w=majority";
 
 const app = express();
