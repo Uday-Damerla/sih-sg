@@ -6,5 +6,15 @@ const UserSchema = new mongoose.Schema({
     password: String,
     role: String
 });
+const DataSchema = new mongoose.Schema({
+    date: String,
+    time: String,
+    'use[kw]': Number,
+    'gen[kw]': Number,
+    userid: String
+});
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = {
+    User: mongoose.model('User', UserSchema),
+    Data: mongoose.model('Data', DataSchema)
+};

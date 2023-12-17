@@ -1,36 +1,66 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const User = require('./models/user');
+const { User, Data }= require('./models/user');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const { createServer } = require('http');
 const cors = require('cors');
 const path = require('path');
 
-
 const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-// Enable all CORS requests
 app.use(cors());
+
 const uri = "mongodb+srv://Uday:MjjJ700NYlGsgSPd@cluster0.q2srzww.mongodb.net/?retryWrites=true&w=majority";
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
+let client;
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static('.')); // Serve static files from the current directory
+app.use(bodyParser.json());
+app.use(express.static('.'));
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+const server = createServer(app);
+const port = process.env.PORT || 3000;
+
+server.listen(port, async () => {
+    console.log(`Server started on port ${port}`);
+    client = new MongoClient(uri, {
+        serverApi: {
+            version: ServerApiVersion.v1,
+            strict: true,
+            deprecationErrors: true,
+        }
+    });
+    try {
+        await client.connect();
+    } catch (err) {
+        console.error(err);
+        process.exit(1);
+    }
+});
+process.on('SIGINT', async () => {
+    await client.close();
+    process.exit(0);
+});
+
+const session = require('express-session');
+
+app.use(session({
+    secret: '35900b97094c8f7b886f67ba535c298c32ba8bb5a507d66c8f3ce15d38fd1b5b3615c5221deb6201e2667fb9bbd21089555a6fd6170bdb1a8bcc36de51c8bdb1',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false} // set to true if you're using https
+}));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html'); // Send index.html file
 });
 app.post('/register', async (req, res) => {
     try {
-        await client.connect();
         const database = client.db('SIH-SG');
         const users = database.collection('users');
         const newUser = {
@@ -44,47 +74,120 @@ app.post('/register', async (req, res) => {
     } catch (err) {
         console.error(err);  // Log the error to the console
         res.status(500).send('Error registering user');
-    } finally {
-        await client.close();
     }
 });
 
+async function getConsumptionData(userId, role, range) 
+{
+    const database = client.db('SIH-SG');
+    const collection = database.collection('data');
+
+    let startDate;
+    const endDate = new Date();
+    
+
+    switch (range) {
+        case 'day':
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'month':
+            startDate = new Date();
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'year':
+            startDate = new Date();
+            startDate.setMonth(0, 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+    }
+    let consumptionData;
+    if (role === 'admin') {
+        consumptionData = await collection.aggregate([
+            { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
+            { $group: { _id: "$date", total: { $sum: "$use[kw]" } } }
+        ]).toArray();
+    } else {
+        consumptionData = await collection.find({
+            "userid": userId,
+            "date": {
+                "$gte": startDate.toISOString().split('T')[0],
+                "$lte": endDate.toISOString().split('T')[0]
+            },
+            "use[kw]": { "$exists": true }
+        }, {"use[kw]": 1, "_id": 0}).toArray();
+    }
+
+    return consumptionData.map(item => ({ date: item.date, value: item.total || item['use[kw]']}));
+}
+
+async function getGenerationData(userId, role, range) {
+    // ... existing code ...
+    const database = client.db('SIH-SG');
+    const collection = database.collection('data');
+
+    let startDate;
+    const endDate = new Date();
+    
+
+    switch (range) {
+        case 'day':
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'month':
+            startDate = new Date();
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'year':
+            startDate = new Date();
+            startDate.setMonth(0, 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+    }
+
+    let generationData;
+    if (role === 'admin') {
+        generationData = await collection.aggregate([
+            { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
+            { $group: { _id: "$date", total: { $sum: "$gen[kw]" } } }
+        ]).toArray();
+    } else {
+        generationData = await collection.find({
+            "userid": userId,
+            "date": {
+                "$gte": startDate.toISOString().split('T')[0],
+                "$lte": endDate.toISOString().split('T')[0]
+            },
+            "gen[kw]": { "$exists": true }
+        }, {"gen[kw]": 1, "_id": 0}).toArray();
+    }
+    return generationData.map(item => ({ date: item.date, value: item.total || item['gen[kw]']}));
+}
 app.post('/fetchData', async (req, res) => {
     try {
-        await client.connect();
-        const database = client.db('SIH-SG');
-        const collection = database.collection('data'); // Replace with your collection name
+        const userId = req.body.userId; // Get the user ID from the request body
+        const role = req.body.role; // Get the role from the request body
+        const view = req.body.view; // Get the view from the request body
 
-        // Query the database based on the view
-        const view = req.body.view;
-        let data;
-        if (view === 'Daily View') {
-            // Query for daily data
-        } else if (view === 'Monthly View') {
-            // Query for monthly data
-        } else if (view === 'Yearly View') {
-            // Query for yearly data
-        }
+        // Fetch the consumption and generation data
+        const consumptionData = await getConsumptionData(userId, role, view);
+        const generationData = await getGenerationData(userId, role, view);
 
-        res.json(data);
+        // Send the data to the client
+        //console.log({ consumptionData, generationData });
+        res.json({ consumptionData, generationData });
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal server error');
-    } finally {
-        await client.close();
     }
 });
-const session = require('express-session');
 
-app.use(session({
-    secret: '35900b97094c8f7b886f67ba535c298c32ba8bb5a507d66c8f3ce15d38fd1b5b3615c5221deb6201e2667fb9bbd21089555a6fd6170bdb1a8bcc36de51c8bdb1',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false} // set to true if you're using https
-}));
+
 app.post('/login', async (req, res) => {
     try {
-        await client.connect();
         const database = client.db('SIH-SG');
         const users = database.collection('users');
         const user = await users.findOne({ role: req.body.role, userid: req.body.userid, password: req.body.password });
@@ -92,6 +195,7 @@ app.post('/login', async (req, res) => {
             res.status(401).send('Invalid username or password');
         } else {
             req.session.userId = user.userId;
+            req.session.role = user.role;
             if (user.role === 'admin') {
                 res.redirect('/adash'); // Redirect to adash if the user is an admin
             } else {
@@ -101,16 +205,20 @@ app.post('/login', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal server error');
-    } finally {
-        await client.close();
     }
 });
 app.get('/udash', (req, res) => {
-    res.render('udash', { userId: req.session.userId });
+    try {
+        res.render('udash', { role: req.session.role, userId: req.session.userId });
+    } catch (err) {
+        console.error('Error rendering udash:', err);
+        res.status(500).send('Internal server error');
+    }
 });
+
 app.get('/adash', (req, res) => {
     try {
-        res.render('adash', { userId: req.session.userId });
+        res.render('adash', { role: req.session.role, userId: req.session.userId });
     } catch (err) {
         console.error('Error rendering adash:', err);
         res.status(500).send('Internal server error');
@@ -125,7 +233,5 @@ app.get('/logout', (req, res) => {
     });
 });
 
-const server = createServer(app);
-const port = process.env.PORT || 3000;
-server.listen(port, () => console.log(`Server started on port ${port}`));
 module.exports = server;
+

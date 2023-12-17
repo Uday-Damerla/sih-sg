@@ -12,58 +12,141 @@
         <button class="tablinks" onclick="openTab(event, 'Daily View')">Daily View</button>
         <button class="tablinks" onclick="openTab(event, 'Monthly View')">Monthly View</button>
         <button class="tablinks" onclick="openTab(event, 'Yearly View')">Yearly View</button>
-        <span id="userId" style="float: right;">Admin ID: <%=userId%></span>
+        <span id="userId" style="float: right;">Admin ID: <%= userId %></span>
+        <input type="hidden" id="role" value="<%= role %>">
         <a href="/logout">Logout</a>
     </nav>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-    var myChart; // Declare myChart globally so it can be accessed in openTab function
+    var myChart1, myChart2; // Declare myChart1 and myChart2 globally
+
+    async function fetchData(userId, role, range) {
+    const response = await fetch('http://localhost:3000/fetchData', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId, role: role, view: range }),
+    });
+    const data = await response.json();
+    
+
+    // Transform the data into a format suitable for Chart.js
+    let consumptionData, generationData, labels;
+
+if (range === 'day') {
+    // Get the last data point's date
+let lastDataPointDate = new Date(data.consumptionData[data.consumptionData.length - 1].date);
+
+// Subtract 2 hours from the last data point's date
+lastDataPointDate.setHours(lastDataPointDate.getHours() - 2);
+
+// Filter the data to include only the data points within the range
+consumptionData = data.consumptionData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => item.value);
+generationData = data.generationData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => item.value);
+labels = data.consumptionData.filter(item => new Date(item.date) >= lastDataPointDate).map(item => new Date(item.date).toLocaleDateString());
+
+} else if (range === 'month') {
+    consumptionData = data.consumptionData.filter((item, index) => index % 3 === 0).map(item => item.value);
+    generationData = data.generationData.filter((item, index) => index % 3 === 0).map(item => item.value);
+    labels = data.consumptionData.filter((item, index) => index % 3 === 0).map(item => new Date(item.date).toLocaleDateString());
+} else if (range === 'year') {
+    consumptionData = data.consumptionData.filter((item, index) => index % 14 === 0).map(item => item.value);
+    generationData = data.generationData.filter((item, index) => index % 14 === 0).map(item => item.value);
+    labels = data.consumptionData.filter((item, index) => index % 14 === 0).map(item => new Date(item.date).toLocaleDateString());
+}
+
+// Log the fetched data
+return { consumptionData, generationData, labels };
+}
 
 function openTab(event, tabName) {
-    // Get the h2 tag with id "name" and change its content based on the active button
-    var h2tag = document.getElementById("name");
-    h2tag.innerHTML = tabName;
-
-    // Add an "active" class to the button that opened the tab
-    var tablinks = document.getElementsByClassName("tablinks");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    event.currentTarget.className += " active";
-
-    // Update chart labels based on the active view
-    var labels;
+    // Fetch data based on the active view
+    var userId = document.getElementById('userId').textContent.split(': ')[1];
+    var role = document.getElementById('role').value;
+    
+    var range;
     if (tabName === 'Daily View') {
-        labels = Array.from({length: 24}, (_, i) => i + 'h');
+        range = 'day';
     } else if (tabName === 'Monthly View') {
-        labels = Array.from({length: 30}, (_, i) => i + 'd');
+        range = 'month';
     } else if (tabName === 'Yearly View') {
-        labels = Array.from({length: 365}, (_, i) => i + 'd');
+        range = 'year';
     }
-    myChart.data.labels = labels;
-    myChart.update();
+
+    fetchData(userId,role, range).then(data => {
+        myChart1.data.labels = data.labels;
+        myChart1.data.datasets[0].data = data.consumptionData;
+        myChart1.update();
+
+        myChart2.data.labels = data.labels;
+        myChart2.data.datasets[0].data = data.generationData;
+        myChart2.update();
+    });
 }
 
 window.onload = function() {
-    var ctx = document.getElementById('myChart').getContext('2d');
-    myChart = new Chart(ctx, {
+    var ctx1 = document.getElementById('myChart1').getContext('2d');
+    var ctx2 = document.getElementById('myChart2').getContext('2d');
+    myChart1 = new Chart(ctx1, {
         type: 'line',
         data: {
-            labels: Array.from({length: 24}, (_, i) => i + 'h'), // Default to Daily View
+            labels: [], // Initialize with an empty array
             datasets: [{
                 label: 'Power consumption [kW]',
-                data: [12, 19, 3, 5, 2, 3],
+                data: [],
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1
             }]
         },
         options: {
+            responsive: true,
             scales: {
-                y: {
-                    beginAtZero: true
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'kWh'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Time line'
                 }
             }
+        }
+        }
+    });
+    myChart2 = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: [], // Initialize with an empty array
+            datasets: [{
+                label: 'Power generation [kW]',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'kWh'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Time line'
+                }
+            }}
         }
     });
 
@@ -71,25 +154,25 @@ window.onload = function() {
     openTab({currentTarget: document.querySelector(".tablinks")}, 'Daily View');
 }
 </script>
+
+<style>
+    .chart-container {
+        width: 70%; /* Adjust this value to change the size of the charts */
+        padding: 1em;
+    }
+</style>
 <main>
-    <section style="display: flex;">
+    <section style="display: flex; justify-content: space-between;">
         <div>
             <h2 id="name"></h2>
-            <p>Grid Power [E/M]</p>
-            <p>Time</p>
-            <p><b>State:</b></p>
-            <p>Feed-in mode</p>
-            <p><b>Live values:</b></p>
-            <p>Generator Power -24.98 kW</p>
-            <p>Grid Power -24.49 kW</p>
         </div>
-        <div>
-            <canvas id="myChart"></canvas>
+        <div style="display: flex; justify-content: space-between; width: 100%;">
+            <div class="chart-container">
+                <canvas id="myChart1"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="myChart2"></canvas>
+            </div>
         </div>
     </section>
 </main>
-    <footer>
-        <p>© 2023 SGaas</p>
-    </footer>
-</body>
-</html>
