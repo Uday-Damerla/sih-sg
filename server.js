@@ -87,7 +87,7 @@ app.post('/login', async (req, res) => {
         await client.connect();
         const database = client.db('SIH-SG');
         const users = database.collection('users');
-        const user = await users.findOne({ role: req.body.role, userId: req.body.userId, password: req.body.password });
+        const user = await users.findOne({ role: req.body.role, userid: req.body.userid, password: req.body.password });
         if (!user) {
             res.status(401).send('Invalid username or password');
         } else {
