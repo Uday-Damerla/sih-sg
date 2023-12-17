@@ -1,33 +1,45 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const User = require('./models/user');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const { createServer } = require('http');
-const cors = require('cors');
-const path = require('path');
+const session = require('express-session');
+const MongoClient = require('mongodb').MongoClient;
+const uri = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/test?retryWrites=true&w=majority";
 
 const app = express();
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-// Enable all CORS requests
-app.use(cors());
-const uri = "mongodb+srv://Uday:MjjJ700NYlGsgSPd@cluster0.q2srzww.mongodb.net/?retryWrites=true&w=majority";
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+app.use(session({
+    secret: '35900b97094c8f7b886f67ba535c298c32ba8bb5a507d66c8f3ce15d38fd1b5b3615c5221deb6201e2667fb9bbd21089555a6fd6170bdb1a8bcc36de51c8bdb1',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false} // set to true if you're using https
+}));
+
+app.post('/login', async (req, res) => {
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    try {
+        await client.connect();
+        const database = client.db('SIH-SG');
+        const users = database.collection('users');
+        const user = await users.findOne({ role: req.body.role, username: req.body.username, password: req.body.password });
+        if (!user) {
+            res.status(401).send('Invalid username or password');
+        } else {
+            req.session.userId = user.userId; // Set user id as a session
+            
+            if (user.role === 'admin') {
+                res.redirect('/adash'); // Redirect to adash if the user is an admin
+            } else {
+                res.redirect('/udash'); // Redirect to udash otherwise
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal server error');
+    } finally {
+        await client.close();
+    }
 });
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static('.')); // Serve static files from the current directory
-
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html'); // Send index.html file
-});
 app.post('/register', async (req, res) => {
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     try {
         await client.connect();
         const database = client.db('SIH-SG');
@@ -49,6 +61,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/fetchData', async (req, res) => {
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     try {
         await client.connect();
         const database = client.db('SIH-SG');
@@ -59,67 +72,38 @@ app.post('/fetchData', async (req, res) => {
         let data;
         if (view === 'Daily View') {
             // Query for daily data
+            data = await collection.find({}).toArray(); // Replace with your query
         } else if (view === 'Monthly View') {
             // Query for monthly data
+            data = await collection.find({}).toArray(); // Replace with your query
         } else if (view === 'Yearly View') {
             // Query for yearly data
+            data = await collection.find({}).toArray(); // Replace with your query
         }
 
         res.json(data);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Internal server error');
+        res.status(500).send('Error fetching data');
     } finally {
         await client.close();
     }
 });
-const session = require('express-session');
 
-app.use(session({
-    secret: '35900b97094c8f7b886f67ba535c298c32ba8bb5a507d66c8f3ce15d38fd1b5b3615c5221deb6201e2667fb9bbd21089555a6fd6170bdb1a8bcc36de51c8bdb1',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false} // set to true if you're using https
-}));
-app.post('/login', async (req, res) => {
-    try {
-        await client.connect();
-        const database = client.db('SIH-SG');
-        const users = database.collection('users');
-        const user = await users.findOne({ role: req.body.role, username: req.body.username, password: req.body.password });
-        if (!user) {
-            res.status(401).send('Invalid username or password');
-        } else {
-            
-            if (user.role === 'admin') {
-                req.session.username = user.name;
-                res.redirect('/adash'); // Redirect to adash if the user is an admin
-            } else {
-                req.session.userId = user.userId;
-                res.redirect('/udash'); // Redirect to udash otherwise
-            }
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Internal server error');
-    } finally {
-        await client.close();
-    }
-});
 app.get('/adash', (req, res) => {
-    res.render('adash', { username: req.session.username });
+    res.render('adash', { userId: req.session.userId });
 });
+
 app.get('/udash', (req, res) => {
     res.render('udash', { userId: req.session.userId });
 });
-app.get('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return console.log(err);
-        }
-        res.redirect('/index.html');
-    });
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });
+
+
+
 
 const server = createServer(app);
 const port = process.env.PORT || 3000;
