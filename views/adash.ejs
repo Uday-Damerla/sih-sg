@@ -21,7 +21,7 @@
     var myChart1, myChart2; // Declare myChart1 and myChart2 globally
 
     async function fetchData(userId, role, range) {
-    const response = await fetch('http://localhost:3000/fetchData', {
+    const response = await fetch('https://sih-sg-f7966ce85980.herokuapp.com/fetchData', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
