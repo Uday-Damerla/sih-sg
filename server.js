@@ -4,9 +4,9 @@ const User = require('./models/user');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const { createServer } = require('http');
 const cors = require('cors');
-app.set('view engine', 'ejs');
-const app = express();
 
+const app = express();
+app.set('view engine', 'ejs');
 // Enable all CORS requests
 app.use(cors());
 const uri = "mongodb+srv://Uday:MjjJ700NYlGsgSPd@cluster0.q2srzww.mongodb.net/?retryWrites=true&w=majority";
