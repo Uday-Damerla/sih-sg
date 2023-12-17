@@ -12,7 +12,7 @@
         <button class="tablinks" onclick="openTab(event, 'Daily View')">Daily View</button>
         <button class="tablinks" onclick="openTab(event, 'Monthly View')">Monthly View</button>
         <button class="tablinks" onclick="openTab(event, 'Yearly View')">Yearly View</button>
-        <span id="userId" style="float: right;">Admin ID: <%= userId %></span>
+        <span id="userId" style="float: right;">Admin ID: <%=username%></span>
         <a href="/logout">Logout</a>
     </nav>
     <script>
@@ -90,21 +90,7 @@ window.onload = function() {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-async function fetchData(tabName) {
-    // Make an AJAX call to your server-side script
-    const response = await fetch('http:///fetchData', { // Replace with your server URL
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ view: tabName }) // Send the view as a parameter to your script
-    });
 
-    // Parse the response to JSON
-    const data = await response.json();
-
-    return data;
-}
 var ctx = document.getElementById('myChart').getContext('2d');
 var myChart = new Chart(ctx, {
     type: 'line',
