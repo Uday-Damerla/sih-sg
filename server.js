@@ -7,7 +7,7 @@ const cors = require('cors');
 app.set('view engine', 'ejs');
 
 
-const uri = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/test?retryWrites=true&w=majority";
+const uri = "mongodb+srv://Uday:MjjJ700NYlGsgSPd@cluster0.mongodb.net/test?retryWrites=true&w=majority";
 
 const app = express();
 
