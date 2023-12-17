@@ -105,6 +105,9 @@ app.post('/login', async (req, res) => {
 app.get('/udash', (req, res) => {
     res.render('udash', { userId: req.session.userId });
 });
+app.get('/adash', (req, res) => {
+    res.render('adash', { userId: req.session.userId });
+});
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
