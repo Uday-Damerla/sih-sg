@@ -49,10 +49,7 @@
     <h1 style="margin: 0; font-family: 'Oranienbaum', serif; font-size: 54px;">Register</h1>
     <form action="https://sih-sg-f7966ce85980.herokuapp.com/register" method="post" onsubmit="return validateForm()">
         <div class="role">
-            <label for="user">User</label>
-            <input type="radio" id="user" name="role" value="user">&nbsp;&nbsp;&nbsp;&nbsp;
-            <label for="admin">Admin</label>
-            <input type="radio" id="admin" name="role" value="admin">
+            <input type="hidden" id="user" name="role" value="user">
         </div>
         <label for="userid">User ID:</label><br>
         <input type="text" id="userid" name="userid"><br>
