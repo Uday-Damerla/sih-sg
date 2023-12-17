@@ -98,13 +98,6 @@ app.get('/udash', (req, res) => {
     res.render('udash', { userId: req.session.userId });
 });
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-});
-
-
-
-
 const server = createServer(app);
 const port = process.env.PORT || 3000;
 server.listen(port, () => console.log(`Server started on port ${port}`));
