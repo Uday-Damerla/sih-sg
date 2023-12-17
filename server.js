@@ -4,8 +4,11 @@ const User = require('./models/user');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const { createServer } = require('http');
 const cors = require('cors');
+const path = require('path');
+
 
 const app = express();
+app.set('views', path.join(__dirname, 'templates'));
 app.set('view engine', 'ejs');
 // Enable all CORS requests
 app.use(cors());
