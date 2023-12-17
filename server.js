@@ -37,7 +37,7 @@ app.post('/register', async (req, res) => {
             password: req.body.password
         };
         const result = await users.insertOne(newUser);
-        res.send('User registered successfully');
+        res.sendFile(__dirname + '/index.html');
     } catch (err) {
         console.error(err);  // Log the error to the console
         res.status(500).send('Error registering user');
