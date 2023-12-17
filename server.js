@@ -88,10 +88,12 @@ app.post('/login', async (req, res) => {
         if (!user) {
             res.status(401).send('Invalid username or password');
         } else {
-            req.session.userId = user.userId;
+            
             if (user.role === 'admin') {
+                req.session.username = user.name;
                 res.redirect('/adash'); // Redirect to adash if the user is an admin
             } else {
+                req.session.userId = user.userId;
                 res.redirect('/udash'); // Redirect to udash otherwise
             }
         }
@@ -101,6 +103,9 @@ app.post('/login', async (req, res) => {
     } finally {
         await client.close();
     }
+});
+app.get('/adash', (req, res) => {
+    res.render('adash', { username: req.session.username });
 });
 app.get('/udash', (req, res) => {
     res.render('udash', { userId: req.session.userId });
