@@ -12,7 +12,7 @@
         <button class="tablinks" onclick="openTab(event, 'Daily View')">Daily View</button>
         <button class="tablinks" onclick="openTab(event, 'Monthly View')">Monthly View</button>
         <button class="tablinks" onclick="openTab(event, 'Yearly View')">Yearly View</button>
-        <span id="userId" style="float: right;">Admin ID: <%= userId %></span>
+        <span id="userId" style="float: right;">User ID: <%= userId %></span>
         <input type="hidden" id="role" value="<%= role %>">
         <a href="/logout">Logout</a>
     </nav>
@@ -56,6 +56,28 @@ labels = data.consumptionData.filter(item => new Date(item.date) >= lastDataPoin
     labels = data.consumptionData.filter((item, index) => index % 14 === 0).map(item => new Date(item.date).toLocaleDateString());
 }
 
+// Calculate averages
+let avgConsumption = consumptionData.reduce((a, b) => a + b, 0) / consumptionData.length;
+let avgGeneration = generationData.reduce((a, b) => a + b, 0) / generationData.length;
+
+
+// Adjust averages based on the selected view
+if (range === 'day') {
+    avgConsumption ;
+    avgGeneration ;
+}
+else if (range === 'month') {
+    avgConsumption *= 12;
+    avgGeneration *= 12;
+} else if (range === 'year') {
+    avgConsumption *= 30;
+    avgGeneration *= 30;
+}
+
+// Update HTML elements
+document.getElementById('avgConsumption').textContent = 'Average Consumption: ' + avgConsumption.toFixed(2) + ' kW ';
+document.getElementById('avgGeneration').textContent = 'Average Generation: ' + avgGeneration.toFixed(2) + ' kW';
+
 // Log the fetched data
 return { consumptionData, generationData, labels };
 }
@@ -82,6 +104,8 @@ function openTab(event, tabName) {
         myChart2.data.labels = data.labels;
         myChart2.data.datasets[0].data = data.generationData;
         myChart2.update();
+
+        
     });
 }
 
@@ -166,13 +190,17 @@ window.onload = function() {
         <div>
             <h2 id="name"></h2>
         </div>
-        <div style="display: flex; justify-content: space-between; width: 100%;">
+        <div style="flex: 1;">
             <div class="chart-container">
                 <canvas id="myChart1"></canvas>
             </div>
+            <div id="avgConsumption" style="text-align: center;"></div>
+        </div>
+        <div style="flex: 1;">
             <div class="chart-container">
                 <canvas id="myChart2"></canvas>
             </div>
+            <div id="avgGeneration" style="text-align: center;"></div>
         </div>
     </section>
 </main>
