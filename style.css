@@ -183,7 +183,40 @@ h6
 	height: 100%;
 }
 
+/* CSS for larger screens */
+.login-container {
+    width: 400px;
+    padding: 20px;
+    margin: auto;
+}
 
+/* CSS for mobile screens */
+@media (max-width: 600px) {
+    .login-container {
+        width: 100%;
+        padding: 10px;
+    }
+}
+/* CSS for larger screens */
+#register {
+    width: 400px;
+    padding: 20px;
+    margin: auto;
+}
+
+#register label, #register input {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* CSS for mobile screens */
+@media (max-width: 600px) {
+    #register {
+        width: 100%;
+        padding: 10px;
+    }
+}
 /*------------- Navigation style start ------------*/
 nav
 {
