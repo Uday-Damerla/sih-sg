@@ -106,9 +106,9 @@ async function getConsumptionData(userId, role, range)
     if (role === 'admin') {
         consumptionData = await collection.aggregate([
             { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
-            { $group: { _id: "$date", total: { $sum: "$use[kw]" } } }
+            { $group: { _id: "$date", total: { $sum: "$use[kw]" } } },
+            { $sort: { _id: 1 } } // Add this line to sort by date
         ]).toArray();
-        console.log(consumptionData)
         return consumptionData.map(item => ({ date: item._id, value: item.total || item['use[kw]']}));
 
 // and similarly for generationData
@@ -155,9 +155,9 @@ async function getGenerationData(userId, role, range) {
     if (role === 'admin') {
         generationData = await collection.aggregate([
             { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
-            { $group: { _id: "$date", total: { $sum: "$gen[kw]" } } }
+            { $group: { _id: "$date", total: { $sum: "$gen[kw]" } } },
+            { $sort: { _id: 1 } } // Add this line to sort by date
         ]).toArray();
-        console.log(generationData)
         return generationData.map(item => ({ date: item._id, value: item.total || item['gen[kw]']}));
 
 // and similarly for generationData
