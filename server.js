@@ -108,6 +108,10 @@ async function getConsumptionData(userId, role, range)
             { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
             { $group: { _id: "$date", total: { $sum: "$use[kw]" } } }
         ]).toArray();
+        console.log(consumptionData)
+        return consumptionData.map(item => ({ date: item._id, value: item.total || item['use[kw]']}));
+
+// and similarly for generationData
     } else {
         consumptionData = await collection.find({
             "userid": userId,
@@ -117,10 +121,9 @@ async function getConsumptionData(userId, role, range)
             },
             "use[kw]": { "$exists": true }
         }, {"use[kw]": 1, "_id": 0}).toArray();
-    }
-
-    return consumptionData.map(item => ({ date: item.date, value: item.total || item['use[kw]']}));
+        return consumptionData.map(item => ({ date: item.date, value: item.total || item['use[kw]']}));
 }
+    }
 
 async function getGenerationData(userId, role, range) {
     // ... existing code ...
@@ -154,6 +157,10 @@ async function getGenerationData(userId, role, range) {
             { $match: { date: { $gte: startDate.toISOString().split('T')[0], $lte: endDate.toISOString().split('T')[0] } } },
             { $group: { _id: "$date", total: { $sum: "$gen[kw]" } } }
         ]).toArray();
+        console.log(generationData)
+        return generationData.map(item => ({ date: item._id, value: item.total || item['gen[kw]']}));
+
+// and similarly for generationData
     } else {
         generationData = await collection.find({
             "userid": userId,
@@ -163,8 +170,9 @@ async function getGenerationData(userId, role, range) {
             },
             "gen[kw]": { "$exists": true }
         }, {"gen[kw]": 1, "_id": 0}).toArray();
+        return generationData.map(item => ({ date: item.date, value: item.total || item['gen[kw]']}));
     }
-    return generationData.map(item => ({ date: item.date, value: item.total || item['gen[kw]']}));
+    
 }
 app.post('/fetchData', async (req, res) => {
     try {
