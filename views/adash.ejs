@@ -51,23 +51,7 @@ generationData = data.generationData.filter(item => new Date(item.date) >= lastD
     consumptionData = data.consumptionData.filter((item, index) => index % 14 === 0).map(item => item.value);
     generationData = data.generationData.filter((item, index) => index % 14 === 0).map(item => item.value);
 }
-if (range === 'day') {
-    labels = [startDate.toLocaleDateString()];
-} else if (range === 'month') {
-    let date = new Date(startDate);
-    labels = [];
-    while (date <= endDate) {
-        labels.push(`${date.getDate()} ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`);
-        date.setDate(date.getDate() + 1);
-    }
-} else if (range === 'year') {
-    let date = new Date(startDate);
-    labels = [];
-    while (date <= endDate) {
-        labels.push(`${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`);
-        date.setMonth(date.getMonth() + 1);
-    }
-}
+
 
 // Calculate averages
 let avgConsumption = consumptionData.reduce((a, b) => a + b, 0) / consumptionData.length;
